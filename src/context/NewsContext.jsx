@@ -19,16 +19,26 @@ export function NewsProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new Date().toISOString().split('T')[0]
+    }
+    return '2026-03-12'
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem('favorites')
-    return saved ? JSON.parse(saved) : []
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('favorites')
+      return saved ? JSON.parse(saved) : []
+    }
+    return []
   })
   const [dailySummary, setDailySummary] = useState('')
 
   useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites))
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('favorites', JSON.stringify(favorites))
+    }
   }, [favorites])
 
   const getApiUrl = (endpoint) => {

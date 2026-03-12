@@ -32,7 +32,7 @@ export default function NewsCard({ news, index }) {
   const favorite = isFavorite(news.id)
 
   const handleOpenLink = () => {
-    if (news.url) {
+    if (news.url && typeof window !== 'undefined') {
       window.open(news.url, '_blank', 'noopener,noreferrer')
     }
   }

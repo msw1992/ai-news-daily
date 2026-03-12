@@ -34,7 +34,7 @@ export default function PMAnalysis() {
         </button>
       </div>
 
-      {(isExpanded || window.innerWidth >= 640) && (
+      {(isExpanded || (typeof window !== 'undefined' && window.innerWidth >= 640)) && (
         <div className="space-y-3 sm:space-y-4">
           {analysis.trends && analysis.trends.length > 0 && (
             <div className="bg-white/60 dark:bg-gray-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4">

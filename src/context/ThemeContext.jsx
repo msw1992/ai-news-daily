@@ -13,13 +13,15 @@ export function ThemeProvider({ children }) {
   })
 
   useEffect(() => {
-    const root = window.document.documentElement
-    if (isDark) {
-      root.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      root.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
+    if (typeof window !== 'undefined') {
+      const root = window.document.documentElement
+      if (isDark) {
+        root.classList.add('dark')
+        localStorage.setItem('theme', 'dark')
+      } else {
+        root.classList.remove('dark')
+        localStorage.setItem('theme', 'light')
+      }
     }
   }, [isDark])
 
