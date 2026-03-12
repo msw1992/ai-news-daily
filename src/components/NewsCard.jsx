@@ -99,8 +99,24 @@ export default function NewsCard({ news, index }) {
           <div className="flex items-center gap-2 sm:gap-3 text-xs text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-              <span className="hidden sm:inline">{formatDistanceToNow(new Date(news.publishedAt), { addSuffix: true, locale: zhCN })}</span>
-              <span className="sm:hidden">{formatDistanceToNow(new Date(news.publishedAt), { locale: zhCN })}</span>
+              <span className="hidden sm:inline">
+                {(() => {
+                  try {
+                    return formatDistanceToNow(new Date(news.publishedAt), { addSuffix: true, locale: zhCN })
+                  } catch (e) {
+                    return '未知时间'
+                  }
+                })()}
+              </span>
+              <span className="sm:hidden">
+                {(() => {
+                  try {
+                    return formatDistanceToNow(new Date(news.publishedAt), { locale: zhCN })
+                  } catch (e) {
+                    return '未知'
+                  }
+                })()}
+              </span>
             </div>
             {news.views && (
               <div className="hidden sm:flex items-center gap-1">

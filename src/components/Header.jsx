@@ -35,15 +35,23 @@ export default function Header() {
   const [showDatePicker, setShowDatePicker] = useState(false)
 
   const handlePrevDay = () => {
-    const prev = subDays(new Date(selectedDate), 1)
-    setSelectedDate(prev.toISOString().split('T')[0])
+    try {
+      const prev = subDays(new Date(selectedDate), 1)
+      setSelectedDate(prev.toISOString().split('T')[0])
+    } catch (e) {
+      console.error('Error handling previous day:', e)
+    }
   }
 
   const handleNextDay = () => {
-    const next = addDays(new Date(selectedDate), 1)
-    const today = new Date().toISOString().split('T')[0]
-    if (next.toISOString().split('T')[0] <= today) {
-      setSelectedDate(next.toISOString().split('T')[0])
+    try {
+      const next = addDays(new Date(selectedDate), 1)
+      const today = new Date().toISOString().split('T')[0]
+      if (next.toISOString().split('T')[0] <= today) {
+        setSelectedDate(next.toISOString().split('T')[0])
+      }
+    } catch (e) {
+      console.error('Error handling next day:', e)
     }
   }
 
@@ -77,8 +85,24 @@ export default function Header() {
                   className="flex items-center gap-2 px-2 lg:px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-200"
                 >
                   <Calendar className="w-4 h-4" />
-                  <span className="hidden lg:inline">{format(new Date(selectedDate), 'MM月dd日 EEEE', { locale: zhCN })}</span>
-                  <span className="lg:hidden">{format(new Date(selectedDate), 'MM/dd', { locale: zhCN })}</span>
+                  <span className="hidden lg:inline">
+                    {(() => {
+                      try {
+                        return format(new Date(selectedDate), 'MM月dd日 EEEE', { locale: zhCN })
+                      } catch (e) {
+                        return selectedDate
+                      }
+                    })()}
+                  </span>
+                  <span className="lg:hidden">
+                    {(() => {
+                      try {
+                        return format(new Date(selectedDate), 'MM/dd', { locale: zhCN })
+                      } catch (e) {
+                        return selectedDate
+                      }
+                    })()}
+                  </span>
                 </button>
                 {showDatePicker && (
                   <div className="absolute top-full mt-2 left-0 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-2 z-50">

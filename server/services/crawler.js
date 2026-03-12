@@ -135,6 +135,19 @@ function isValidUrl(url) {
   }
 }
 
+function formatDate(date) {
+  if (!date) return new Date().toISOString()
+  try {
+    const parsedDate = new Date(date)
+    if (isNaN(parsedDate.getTime())) {
+      return new Date().toISOString()
+    }
+    return parsedDate.toISOString()
+  } catch (e) {
+    return new Date().toISOString()
+  }
+}
+
 async function fetchFromRSS(source) {
   try {
     console.log(`📡 Fetching from ${source.name}...`)
@@ -170,7 +183,7 @@ async function fetchFromRSS(source) {
         url: item.link,
         source: source.name,
         category: categorizeByKeywords(title, summary, source.category),
-        publishedAt: item.pubDate || item.isoDate || new Date().toISOString(),
+        publishedAt: formatDate(item.pubDate || item.isoDate),
         image: extractImage(item.content || item['content:encoded'] || ''),
         isHot: false,
         views: Math.floor(Math.random() * 1000) + 100
@@ -224,7 +237,7 @@ async function fetchFromReadHub() {
         url: item.url || `https://readhub.cn/topic/${item.id}`,
         source: 'ReadHub',
         category: categorizeByKeywords(title, summary, 'enterprise'),
-        publishedAt: item.createdAt || item.publishDate || new Date().toISOString(),
+        publishedAt: formatDate(item.createdAt || item.publishDate),
         image: item.cover || null,
         isHot: index < 3,
         views: item.viewCount || Math.floor(Math.random() * 1500) + 200
@@ -273,7 +286,7 @@ async function fetchFromAIBase() {
         url: item.url || item.link || `https://www.aibase.com/news/${item.id}`,
         source: 'AIBase',
         category: categorizeByKeywords(title, summary, 'llm'),
-        publishedAt: item.publishTime || item.createdAt || item.published_at || new Date().toISOString(),
+        publishedAt: formatDate(item.publishTime || item.createdAt || item.published_at),
         image: item.cover || item.image || item.thumbnail,
         isHot: index < 3,
         views: item.views || item.readCount || Math.floor(Math.random() * 1500) + 200

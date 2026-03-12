@@ -24,14 +24,28 @@ export default function DailySummary() {
           </div>
           <div>
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-              {format(new Date(selectedDate), 'MM月dd日', { locale: zhCN })} AI资讯速递
+              {(() => {
+                try {
+                  return format(new Date(selectedDate), 'MM月dd日', { locale: zhCN })
+                } catch (e) {
+                  return selectedDate
+                }
+              })()} AI资讯速递
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">AI生成的每日热点总结</p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 self-start sm:self-auto">
           <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          {format(new Date(), 'HH:mm')}
+          <span>
+            {(() => {
+              try {
+                return format(new Date(), 'HH:mm')
+              } catch (e) {
+                return ''
+              }
+            })()}
+          </span>
         </div>
       </div>
 
