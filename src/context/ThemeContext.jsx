@@ -7,7 +7,11 @@ export function ThemeProvider({ children }) {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('theme')
       if (saved) return saved === 'dark'
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
+      try {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches
+      } catch (e) {
+        return false
+      }
     }
     return false
   })

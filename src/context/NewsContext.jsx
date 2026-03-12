@@ -53,13 +53,31 @@ export function NewsProvider({ children }) {
     setError(null)
     try {
       const url = getApiUrl(`/api/news?date=${date}`)
-      const response = await fetch(url)
+      let timeoutId = null
+      let controller = null
+      
+      if (typeof AbortController !== 'undefined') {
+        controller = new AbortController()
+        timeoutId = setTimeout(() => controller.abort(), 10000)
+      }
+      
+      const response = await fetch(url, controller ? { signal: controller.signal } : {})
+      
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+      
       if (!response.ok) throw new Error('Failed to fetch news')
       const data = await response.json()
       setNews(data.news || [])
       setDailySummary(data.summary || '')
     } catch (err) {
-      setError(err.message)
+      console.error('Error fetching news:', err)
+      if (err.name === 'AbortError') {
+        setError('请求超时，请检查网络连接')
+      } else {
+        setError(err.message)
+      }
       setNews([])
       setDailySummary('')
     } finally {

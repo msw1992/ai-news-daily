@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>简单测试</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f9fafb;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .test {
+        padding: 15px;
+        margin: 10px 0;
+        background: white;
+        border-radius: 8px;
+        border-left: 4px solid #3b82f6;
+      }
+      .success { border-left-color: #10b981; }
+      .error { border-left-color: #ef4444; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>网站诊断</h1>
+      
+      <div class="test">
+        <h3>1. 基础测试</h3>
+        <p id="basic">正在测试...</p>
+      </div>
+      
+      <div class="test">
+        <h3>2. API测试</h3>
+        <p id="api">正在测试...</p>
+      </div>
+      
+      <div class="test">
+        <h3>3. 设备信息</h3>
+        <p id="device">正在测试...</p>
+      </div>
+      
+      <div class="test">
+        <h3>4. 控制台日志</h3>
+        <div id="console" style="background: #1f2937; color: #f9fafb; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+      </div>
+    </div>
+
+    <script>
+      // 捕获控制台输出
+      const consoleDiv = document.getElementById('console');
+      const originalLog = console.log;
+      const originalError = console.error;
+      
+      console.log = function(...args) {
+        originalLog.apply(console, args);
+        consoleDiv.innerHTML += '<div style="color: #10b981;">[LOG] ' + args.join(' ') + '</div>';
+      };
+      
+      console.error = function(...args) {
+        originalError.apply(console, args);
+        consoleDiv.innerHTML += '<div style="color: #ef4444;">[ERROR] ' + args.join(' ') + '</div>';
+      };
+
+      // 基础测试
+      try {
+        document.getElementById('basic').innerHTML = '<span style="color: #10b981;">✓ JavaScript正常工作</span>';
+        console.log('基础测试通过');
+      } catch (e) {
+        document.getElementById('basic').innerHTML = '<span style="color: #ef4444;">✗ JavaScript错误: ' + e.message + '</span>';
+        console.error('基础测试失败:', e);
+      }
+
+      // API测试
+      fetch('https://ai-news-server-yfsu.onrender.com/api/health')
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('api').innerHTML = '<span style="color: #10b981;">✓ API连接正常: ' + data.status + '</span>';
+          console.log('API测试通过:', data);
+        })
+        .catch(error => {
+          document.getElementById('api').innerHTML = '<span style="color: #ef4444;">✗ API连接失败: ' + error.message + '</span>';
+          console.error('API测试失败:', error);
+        });
+
+      // 设备信息
+      const deviceInfo = `
+        <strong>用户代理:</strong> ${navigator.userAgent.substring(0, 60)}...<br>
+        <strong>屏幕:</strong> ${window.innerWidth}x${window.innerHeight}<br>
+        <strong>触摸:</strong> ${('ontouchstart' in window) ? '是' : '否'}<br>
+        <strong>在线:</strong> ${navigator.onLine ? '是' : '否'}
+      `;
+      document.getElementById('device').innerHTML = deviceInfo;
+      console.log('设备信息:', {
+        userAgent: navigator.userAgent,
+        screen: `${window.innerWidth}x${window.innerHeight}`,
+        touch: 'ontouchstart' in window,
+        online: navigator.onLine
+      });
+
+      // 全局错误监听
+      window.onerror = function(message, source, lineno, colno, error) {
+        console.error('全局错误:', { message, source, lineno, colno, error });
+      };
+
+      console.log('测试页面加载完成');
+    </script>
+  </body>
+</html>
