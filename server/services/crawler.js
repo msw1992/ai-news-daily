@@ -59,12 +59,6 @@ const RSS_SOURCES = [
     enabled: true
   },
   {
-    name: 'Anthropic Blog',
-    url: 'https://www.anthropic.com/news/rss',
-    category: 'llm',
-    enabled: false
-  },
-  {
     name: 'Hugging Face Blog',
     url: 'https://huggingface.co/blog/feed.xml',
     category: 'research',
@@ -78,10 +72,25 @@ const RSS_SOURCES = [
   }
 ]
 
+const API_SOURCES = [
+  {
+    name: 'ReadHub',
+    url: 'https://api.readhub.cn/topic',
+    category: 'enterprise',
+    enabled: true
+  },
+  {
+    name: 'AIBase',
+    url: 'https://www.aibase.com/news',
+    category: 'llm',
+    enabled: true
+  }
+]
+
 const KEYWORDS = {
-  llm: ['GPT', 'ChatGPT', 'Claude', 'LLM', '大模型', '语言模型', 'Gemini', '文心', '通义', 'Llama', 'Gemma', 'Mistral', 'AI模型', 'DeepSeek', 'Qwen', 'Sora', 'DALL-E', 'Midjourney'],
+  llm: ['GPT', 'ChatGPT', 'Claude', 'LLM', '大模型', '语言模型', 'Gemini', '文心', '通义', 'Llama', 'Gemma', 'Mistral', 'AI模型', 'DeepSeek', 'Qwen', 'Sora', 'DALL-E', 'Midjourney', 'Stable Diffusion'],
   chip: ['GPU', '芯片', 'NVIDIA', 'AMD', 'Intel', 'TPU', '算力', 'H100', 'A100', '半导体', 'CPU', 'AI芯片', '昇腾', 'H800', 'B200', 'Blackwell'],
-  application: ['应用', '产品', '落地', '场景', 'AI助手', 'AI工具', '自动化', '智能', 'Copilot', '自动驾驶', '机器人', 'Agent'],
+  application: ['应用', '产品', '落地', '场景', 'AI助手', 'AI工具', '自动化', '智能', 'Copilot', '自动驾驶', '机器人', 'Agent', '智能体'],
   enterprise: ['融资', '收购', '上市', '投资', 'OpenAI', 'Google', 'Microsoft', 'Meta', '百度', '阿里', '腾讯', '字节', '估值', '融资轮'],
   policy: ['法规', '监管', '政策', '法律', '安全', '隐私', '伦理', '治理', '欧盟', 'AI法案', '合规', '审查'],
   research: ['研究', '论文', '突破', '创新', '技术', '算法', 'NeurIPS', 'ICML', 'CVPR', 'ACL', 'DeepMind', '开源']
@@ -176,14 +185,14 @@ async function fetchFromRSS(source) {
   }
 }
 
-async function fetchFromAPI(source) {
+async function fetchFromReadHub() {
   try {
-    console.log(`📡 Fetching from ${source.name} API...`)
+    console.log(`📡 Fetching from ReadHub...`)
     
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 10000)
     
-    const response = await fetch(source.url, {
+    const response = await fetch('https://api.readhub.cn/topic?lastCursor=&pageSize=20', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept': 'application/json'
@@ -199,28 +208,82 @@ async function fetchFromAPI(source) {
     
     const data = await response.json()
     
-    const items = (data.data || data.items || data.articles || data).slice(0, 15).map((item, index) => {
-      const title = item.title || item.headline || '无标题'
-      const summary = item.summary || item.description || item.content || title
+    const aiKeywords = ['AI', '人工智能', '大模型', 'GPT', 'ChatGPT', '机器学习', '深度学习', 'LLM', 'OpenAI', 'Claude', 'Gemini']
+    
+    const items = (data.data || []).filter(item => {
+      const text = `${item.title} ${item.summary || ''}`.toLowerCase()
+      return aiKeywords.some(keyword => text.includes(keyword.toLowerCase()))
+    }).slice(0, 15).map((item, index) => {
+      const title = item.title || '无标题'
+      const summary = item.summary || item.title
       
       return {
-        id: `api-${source.name}-${Date.now()}-${index}`,
+        id: `readhub-${Date.now()}-${index}`,
         title,
         summary: summary.slice(0, 300),
-        url: item.url || item.link || item.web_url,
-        source: source.name,
-        category: categorizeByKeywords(title, summary, source.category),
-        publishedAt: item.published_at || item.pubDate || item.created_at || new Date().toISOString(),
-        image: item.cover_image || item.image || item.thumbnail,
+        url: item.url || `https://readhub.cn/topic/${item.id}`,
+        source: 'ReadHub',
+        category: categorizeByKeywords(title, summary, 'enterprise'),
+        publishedAt: item.createdAt || item.publishDate || new Date().toISOString(),
+        image: item.cover || null,
         isHot: index < 3,
-        views: item.views || item.read_count || Math.floor(Math.random() * 1500) + 200
+        views: item.viewCount || Math.floor(Math.random() * 1500) + 200
       }
     }).filter(item => isValidUrl(item.url))
     
-    console.log(`✅ ${source.name} API: ${items.length} items`)
+    console.log(`✅ ReadHub: ${items.length} items`)
     return items
   } catch (error) {
-    console.error(`❌ ${source.name} API: ${error.message}`)
+    console.error(`❌ ReadHub: ${error.message}`)
+    return []
+  }
+}
+
+async function fetchFromAIBase() {
+  try {
+    console.log(`📡 Fetching from AIBase...`)
+    
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
+    
+    const response = await fetch('https://www.aibase.com/api/news/list?page=1&size=20', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/json'
+      },
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`)
+    }
+    
+    const data = await response.json()
+    
+    const items = (data.data || data.list || data.items || []).slice(0, 15).map((item, index) => {
+      const title = item.title || item.name || '无标题'
+      const summary = item.summary || item.description || item.content || title
+      
+      return {
+        id: `aibase-${Date.now()}-${index}`,
+        title,
+        summary: summary.slice(0, 300),
+        url: item.url || item.link || `https://www.aibase.com/news/${item.id}`,
+        source: 'AIBase',
+        category: categorizeByKeywords(title, summary, 'llm'),
+        publishedAt: item.publishTime || item.createdAt || item.published_at || new Date().toISOString(),
+        image: item.cover || item.image || item.thumbnail,
+        isHot: index < 3,
+        views: item.views || item.readCount || Math.floor(Math.random() * 1500) + 200
+      }
+    }).filter(item => isValidUrl(item.url))
+    
+    console.log(`✅ AIBase: ${items.length} items`)
+    return items
+  } catch (error) {
+    console.error(`❌ AIBase: ${error.message}`)
     return []
   }
 }
@@ -233,7 +296,12 @@ export async function fetchAllNews() {
     .filter(s => s.enabled)
     .map(source => fetchFromRSS(source))
   
-  const results = await Promise.allSettled(rssPromises)
+  const apiPromises = [
+    fetchFromReadHub(),
+    fetchFromAIBase()
+  ]
+  
+  const results = await Promise.allSettled([...rssPromises, ...apiPromises])
   
   const allNews = results
     .filter(r => r.status === 'fulfilled')
@@ -279,8 +347,13 @@ export function getNewsByDate(date) {
 }
 
 export function getAvailableSources() {
-  return RSS_SOURCES.filter(s => s.enabled).map(s => ({
+  const rssSources = RSS_SOURCES.filter(s => s.enabled).map(s => ({
     name: s.name,
     category: s.category
   }))
+  const apiSources = API_SOURCES.filter(s => s.enabled).map(s => ({
+    name: s.name,
+    category: s.category
+  }))
+  return [...rssSources, ...apiSources]
 }

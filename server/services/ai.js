@@ -11,12 +11,12 @@ export function classifyNews(title, summary) {
   const text = `${title} ${summary}`.toLowerCase()
   
   const keywords = {
-    llm: ['gpt', 'chatgpt', 'claude', 'llm', '大模型', '语言模型', 'gemini', '文心', '通义', 'llama', 'gemma', 'mistral'],
-    chip: ['gpu', '芯片', 'nvidia', 'amd', 'intel', 'tpu', '算力', 'h100', 'a100', '半导体', 'cpu'],
-    application: ['应用', '产品', '落地', '场景', '助手', '工具', '自动化', 'copilot'],
-    enterprise: ['融资', '收购', '上市', '投资', 'openai', 'google', 'microsoft', 'meta', '百度', '阿里', '腾讯'],
-    policy: ['法规', '监管', '政策', '法律', '安全', '隐私', '伦理', '治理'],
-    research: ['研究', '论文', '突破', '创新', '技术', '算法', 'neurips', 'icml', 'cvpr']
+    llm: ['gpt', 'chatgpt', 'claude', 'llm', '大模型', '语言模型', 'gemini', '文心', '通义', 'llama', 'gemma', 'mistral', 'deepseek', 'qwen', 'sora'],
+    chip: ['gpu', '芯片', 'nvidia', 'amd', 'intel', 'tpu', '算力', 'h100', 'a100', '半导体', 'cpu', 'b200', 'blackwell'],
+    application: ['应用', '产品', '落地', '场景', '助手', '工具', '自动化', 'copilot', 'agent', '智能体', '机器人'],
+    enterprise: ['融资', '收购', '上市', '投资', 'openai', 'google', 'microsoft', 'meta', '百度', '阿里', '腾讯', '字节'],
+    policy: ['法规', '监管', '政策', '法律', '安全', '隐私', '伦理', '治理', 'ai法案'],
+    research: ['研究', '论文', '突破', '创新', '技术', '算法', 'neurips', 'icml', 'cvpr', 'deepmind']
   }
   
   for (const [category, words] of Object.entries(keywords)) {
@@ -46,33 +46,69 @@ export function generateSummary(news) {
   const hotNews = news.filter(n => n.isHot).slice(0, 3)
   const totalNews = news.length
   
-  let summary = `今日共收录 ${totalNews} 条AI领域资讯`
+  const topics = []
+  const trends = []
+  
+  const allText = news.map(n => `${n.title} ${n.summary}`).join(' ').toLowerCase()
+  
+  if (allText.includes('agent') || allText.includes('智能体')) {
+    trends.push('AI智能体成为新热点')
+  }
+  if (allText.includes('开源')) {
+    trends.push('开源生态持续繁荣')
+  }
+  if (allText.includes('融资') || allText.includes('投资')) {
+    trends.push('资本市场活跃')
+  }
+  if (allText.includes('视频') || allText.includes('sora') || allText.includes('生成')) {
+    trends.push('多模态生成技术突破')
+  }
+  if (allText.includes('芯片') || allText.includes('gpu') || allText.includes('算力')) {
+    trends.push('算力竞争加剧')
+  }
+  if (allText.includes('应用') || allText.includes('落地')) {
+    trends.push('应用落地加速')
+  }
   
   if (hotNews.length > 0) {
-    summary += `，热门话题包括：${hotNews.map(n => n.title.slice(0, 20)).join('、')}等`
+    hotNews.forEach(n => {
+      const shortTitle = n.title.length > 15 ? n.title.slice(0, 15) + '...' : n.title
+      topics.push(shortTitle)
+    })
   }
   
-  const categorySummaries = []
-  for (const [cat, items] of Object.entries(categories)) {
-    if (items.length > 0) {
-      const catNames = {
-        llm: '大模型',
-        chip: '芯片算力',
-        application: '应用落地',
-        enterprise: '企业动态',
-        policy: '政策法规',
-        research: '研究突破'
-      }
-      categorySummaries.push(`${catNames[cat] || cat}${items.length}条`)
-    }
+  let summary = ''
+  
+  if (trends.length > 0) {
+    summary = `今日AI领域${trends.slice(0, 3).join('、')}。`
+  } else {
+    summary = `今日AI领域动态活跃，`
   }
   
-  if (categorySummaries.length > 0) {
-    summary += `。各领域分布：${categorySummaries.join('、')}`
+  if (topics.length > 0) {
+    summary += `热点关注：${topics.slice(0, 3).join('、')}等话题引发讨论。`
   }
   
-  const sources = [...new Set(news.map(n => n.source))]
-  summary += `。资讯来源：${sources.slice(0, 5).join('、')}${sources.length > 5 ? '等' : ''}`
+  const categoryNames = {
+    llm: '大模型',
+    chip: '芯片算力',
+    application: '应用落地',
+    enterprise: '企业动态',
+    policy: '政策法规',
+    research: '研究突破'
+  }
+  
+  const mainCategories = Object.entries(categories)
+    .sort((a, b) => b[1].length - a[1].length)
+    .slice(0, 3)
+    .map(([cat]) => categoryNames[cat])
+    .filter(Boolean)
+  
+  if (mainCategories.length > 0) {
+    summary += `今日${mainCategories.join('、')}领域资讯较为活跃，共收录${totalNews}条资讯。`
+  } else {
+    summary += `共收录${totalNews}条资讯。`
+  }
   
   return summary
 }
